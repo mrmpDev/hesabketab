@@ -6,8 +6,8 @@ use App\Models\BankCard;
 use App\Models\Buyer;
 use App\Models\ExpenseCategory;
 use App\Models\Organization;
-use App\Models\UserPreference;
 use App\Models\Vendor;
+use App\Support\ExpenseDefaults;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -18,6 +18,17 @@ use Filament\Schemas\Schema;
 
 class ExpenseForm
 {
+    /**
+     * Numeric/currency-style inputs render with a Persian (RTL) direction
+     * by default, which pushes the cursor behind the "ریال" suffix and
+     * makes the field look impossible to type in. Forcing the actual
+     * <input> to be LTR fixes this while the label/suffix stay RTL.
+     */
+    private const LTR_NUMERIC_INPUT_ATTRIBUTES = [
+        'dir' => 'ltr',
+        'style' => 'text-align: left;',
+    ];
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -36,13 +47,8 @@ class ExpenseForm
                             ->preload()
                             ->required()
                             ->live()
-                            ->default(
-                                fn () => UserPreference::query()
-                                    ->where('user_id', auth()->id())
-                                    ->orderByDesc('id')
-                                    ->value('organization_id')
-                            )
-                            ->afterStateUpdated(function ($state, $set) {
+                            ->default(fn () => ExpenseDefaults::organizationId())
+                            ->afterStateUpdated(function ($state, $set, $get) {
                                 if (! $state) {
                                     $set('buyer_id', null);
                                     $set('vendor_id', null);
@@ -51,15 +57,19 @@ class ExpenseForm
                                     return;
                                 }
 
-                                $preference = UserPreference::query()
-                                    ->where('user_id', auth()->id())
-                                    ->where('organization_id', $state)
-                                    ->first();
-
-                                $set('buyer_id', $preference?->buyer_id);
-                                $set('bank_card_id', $preference?->bank_card_id);
-                                $set('payment_method', $preference?->default_payment_method);
+                                // هر سازمان خریدار پیش‌فرض خودش را دارد؛ با تغییر
+                                // سازمان، خریدار پیش‌فرض همان سازمان انتخاب می‌شود.
+                                $set('buyer_id', ExpenseDefaults::buyerId($state));
                                 $set('vendor_id', null);
+
+                                // اگر روش پرداخت هم‌اکنون پوز یا کارت‌به‌کارت است،
+                                // کارت پیش‌فرض سازمان جدید انتخاب می‌شود.
+                                $set(
+                                    'bank_card_id',
+                                    in_array($get('payment_method'), ['pos', 'transfer'], true)
+                                        ? ExpenseDefaults::bankCardId($state)
+                                        : null
+                                );
                             }),
 
                         DatePicker::make('expense_date')
@@ -103,7 +113,8 @@ class ExpenseForm
                             })
                             ->searchable()
                             ->preload()
-                            ->live(),
+                            ->live()
+                            ->default(fn ($get) => ExpenseDefaults::buyerId($get('organization_id'))),
 
                         Select::make('vendor_id')
                             ->label('فروشگاه / دریافت‌کننده')
@@ -130,7 +141,15 @@ class ExpenseForm
                                 'cash' => 'نقدی',
                             ])
                             ->required()
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(function ($state, $set, $get) {
+                                // با انتخاب پوز یا کارت‌به‌کارت، در صورتی که کارتی
+                                // انتخاب نشده باشد، کارت پیش‌فرض سازمان به صورت
+                                // خودکار نمایش داده و انتخاب می‌شود.
+                                if (in_array($state, ['pos', 'transfer'], true) && blank($get('bank_card_id'))) {
+                                    $set('bank_card_id', ExpenseDefaults::bankCardId($get('organization_id')));
+                                }
+                            }),
 
                         Select::make('bank_card_id')
                             ->label('کارت پرداخت‌کننده')
@@ -153,6 +172,13 @@ class ExpenseForm
                             })
                             ->searchable()
                             ->preload()
+                            ->default(function ($get) {
+                                if (! in_array($get('payment_method'), ['pos', 'transfer'], true)) {
+                                    return null;
+                                }
+
+                                return ExpenseDefaults::bankCardId($get('organization_id'));
+                            })
                             ->visible(fn ($get) => in_array($get('payment_method'), ['pos', 'transfer']))
                             ->required(fn ($get) => in_array($get('payment_method'), ['pos', 'transfer'])),
 
@@ -162,7 +188,8 @@ class ExpenseForm
                             ->integer()
                             ->minValue(0)
                             ->suffix('ریال')
-                            ->required(),
+                            ->required()
+                            ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
 
                         Textarea::make('notes')
                             ->label('توضیحات')
@@ -187,7 +214,8 @@ class ExpenseForm
                                     ->label('تعداد')
                                     ->numeric()
                                     ->minValue(0)
-                                    ->default(1),
+                                    ->default(1)
+                                    ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
 
                                 TextInput::make('unit')
                                     ->label('واحد')
@@ -198,7 +226,8 @@ class ExpenseForm
                                     ->numeric()
                                     ->integer()
                                     ->minValue(0)
-                                    ->suffix('ریال'),
+                                    ->suffix('ریال')
+                                    ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
                             ])
                             ->columns(4)
                             ->defaultItems(1)

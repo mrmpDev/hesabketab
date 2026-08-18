@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ExpenseCategories\Schemas;
 
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -17,6 +18,10 @@ class ExpenseCategoryForm
                     ->label('نام دسته‌بندی')
                     ->required()
                     ->maxLength(150),
+
+                ColorPicker::make('color')
+                    ->label('رنگ')
+                    ->default('#3B82F6'),
 
                 Toggle::make('is_active')
                     ->label('فعال')

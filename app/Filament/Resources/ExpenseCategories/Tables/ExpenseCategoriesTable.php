@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ExpenseCategories\Tables;
 use App\Traits\HasJalaliDate;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -29,6 +30,9 @@ class ExpenseCategoriesTable
                     ->searchable()
                     ->sortable()
                     ->weight('semibold'),
+
+                ColorColumn::make('color')
+                    ->label('رنگ'),
 
                 IconColumn::make('is_active')
                     ->label('وضعیت')

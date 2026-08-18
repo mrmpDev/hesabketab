@@ -38,7 +38,11 @@ class BankCardForm
                     ->maxLength(16)
                     ->minLength(16)
                     ->placeholder('6037991234567890')
-                    ->rule('digits:16'),
+                    ->rule('digits:16')
+                    ->extraInputAttributes([
+                        'dir' => 'ltr',
+                        'style' => 'text-align: left;',
+                    ]),
 
                 Toggle::make('is_default')
                     ->label('کارت پیش‌فرض')
