@@ -14,6 +14,7 @@ class VendorSeeder extends Seeder
     public function run(): void
     {
         $vendors = [
+            'فروشگاه پیش فرض',
             'داروخانه دل آذر',
             'لبنیات سقاخانه',
             'ساندویچ شبنم',
