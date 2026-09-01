@@ -20,24 +20,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+
+        $this->call([
+            UserSeeder::class,
+            ExpenseCategorySeeder::class,
+            OrganizationSeeder::class,
+            BuyerSeeder::class,
+            VendorSeeder::class,
+            BankCardSeeder::class,
         ]);
-
-        ExpenseCategory::factory()->count(5)->create();
-
-        Organization::factory()
-            ->count(3)
-            ->create()
-            ->each(function (Organization $organization) {
-                Buyer::factory()->for($organization)->default()->create();
-                Buyer::factory()->for($organization)->count(2)->create();
-
-                BankCard::factory()->for($organization)->default()->create();
-                BankCard::factory()->for($organization)->count(1)->create();
-
-                Vendor::factory()->for($organization)->count(3)->create();
-            });
     }
 }
