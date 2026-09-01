@@ -39,6 +39,11 @@ class BuyerSeeder extends Seeder
                 'first_name' => 'محمدرضا',
                 'last_name' => 'محمدپوران',
             ],
+            [
+                'organization_code' => 'tabriz-office',
+                'first_name' => 'محمدرضا',
+                'last_name' => 'محمد پوران',
+            ],
         ];
 
         foreach ($buyers as $buyer) {

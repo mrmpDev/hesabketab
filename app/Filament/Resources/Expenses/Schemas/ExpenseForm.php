@@ -47,9 +47,9 @@ class ExpenseForm
                             ->preload()
                             ->required()
                             ->live()
-                            ->default(fn () => ExpenseDefaults::organizationId())
+                            ->default(fn() => ExpenseDefaults::organizationId())
                             ->afterStateUpdated(function ($state, $set, $get) {
-                                if (! $state) {
+                                if (!$state) {
                                     $set('buyer_id', null);
                                     $set('vendor_id', null);
                                     $set('bank_card_id', null);
@@ -97,7 +97,7 @@ class ExpenseForm
                             ->options(function ($get) {
                                 $organizationId = $get('organization_id');
 
-                                if (! $organizationId) {
+                                if (!$organizationId) {
                                     return [];
                                 }
 
@@ -106,7 +106,7 @@ class ExpenseForm
                                     ->orderBy('first_name')
                                     ->orderBy('last_name')
                                     ->get()
-                                    ->mapWithKeys(fn (Buyer $buyer) => [
+                                    ->mapWithKeys(fn(Buyer $buyer) => [
                                         $buyer->id => $buyer->full_name,
                                     ])
                                     ->all();
@@ -114,14 +114,14 @@ class ExpenseForm
                             ->searchable()
                             ->preload()
                             ->live()
-                            ->default(fn ($get) => ExpenseDefaults::buyerId($get('organization_id'))),
+                            ->default(fn($get) => ExpenseDefaults::buyerId($get('organization_id'))),
 
                         Select::make('vendor_id')
                             ->label('فروشگاه / دریافت‌کننده')
                             ->options(function ($get) {
                                 $organizationId = $get('organization_id');
 
-                                if (! $organizationId) {
+                                if (!$organizationId) {
                                     return [];
                                 }
 
@@ -153,10 +153,11 @@ class ExpenseForm
 
                         Select::make('bank_card_id')
                             ->label('کارت پرداخت‌کننده')
+                            ->columnSpanFull()
                             ->options(function ($get) {
                                 $organizationId = $get('organization_id');
 
-                                if (! $organizationId) {
+                                if (!$organizationId) {
                                     return [];
                                 }
 
@@ -165,7 +166,7 @@ class ExpenseForm
                                     ->orderBy('bank_name')
                                     ->orderBy('holder_name')
                                     ->get()
-                                    ->mapWithKeys(fn (BankCard $card) => [
+                                    ->mapWithKeys(fn(BankCard $card) => [
                                         $card->id => $card->display_name,
                                     ])
                                     ->all();
@@ -173,23 +174,49 @@ class ExpenseForm
                             ->searchable()
                             ->preload()
                             ->default(function ($get) {
-                                if (! in_array($get('payment_method'), ['pos', 'transfer'], true)) {
+                                if (!in_array($get('payment_method'), ['pos', 'transfer'], true)) {
                                     return null;
                                 }
 
                                 return ExpenseDefaults::bankCardId($get('organization_id'));
                             })
-                            ->visible(fn ($get) => in_array($get('payment_method'), ['pos', 'transfer']))
-                            ->required(fn ($get) => in_array($get('payment_method'), ['pos', 'transfer'])),
+                            ->visible(fn($get) => in_array($get('payment_method'), ['pos', 'transfer']))
+                            ->required(fn($get) => in_array($get('payment_method'), ['pos', 'transfer'])),
+
+//                        TextInput::make('total_amount')
+//                            ->columnSpanFull()
+//                            ->label('مبلغ کل')
+//                            ->numeric()
+//                            ->integer()
+//                            ->minValue(0)
+//                            ->suffix('ریال')
+//                            ->required()
+//                            ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
 
                         TextInput::make('total_amount')
+                            ->columnSpanFull()
                             ->label('مبلغ کل')
-                            ->numeric()
-                            ->integer()
+                            ->inputMode('numeric')
                             ->minValue(0)
                             ->suffix('ریال')
                             ->required()
-                            ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
+                            ->dehydrateStateUsing(fn($state) => (int)str_replace(',', '', $state))
+                            ->extraInputAttributes([
+                                'dir' => 'ltr',
+                                'style' => 'direction: ltr; text-align: left;',
+                                'x-data' => '{}',
+                                'x-on:input' => <<<'JS'
+            let value = $el.value.replace(/,/g, '').replace(/\D/g, '');
+
+            if (value === '') {
+                $el.value = '';
+                return;
+            }
+
+            $el.value = Number(value).toLocaleString('en-US');
+        JS,
+                            ]),
+
 
                         Textarea::make('notes')
                             ->label('توضیحات')
@@ -221,15 +248,38 @@ class ExpenseForm
                                     ->label('واحد')
                                     ->placeholder('عدد، بسته، کیلو، خدمت و ...'),
 
+//                                TextInput::make('amount')
+//                                    ->label('مبلغ آیتم')
+//                                    ->numeric()
+//                                    ->integer()
+//                                    ->minValue(0)
+//                                    ->suffix('ریال')
+//                                    ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
+//                            ])
+
                                 TextInput::make('amount')
                                     ->label('مبلغ آیتم')
-                                    ->numeric()
-                                    ->integer()
+                                    ->inputMode('numeric')
                                     ->minValue(0)
                                     ->suffix('ریال')
-                                    ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
+                                    ->dehydrateStateUsing(fn($state) => (int)str_replace(',', '', $state))
+                                    ->extraInputAttributes([
+                                        'dir' => 'ltr',
+                                        'style' => 'direction: ltr; text-align: left;',
+                                        'x-data' => '{}',
+                                        'x-on:input' => <<<'JS'
+            let value = $el.value.replace(/,/g, '').replace(/\D/g, '');
+
+            if (value === '') {
+                $el.value = '';
+                return;
+            }
+
+            $el.value = Number(value).toLocaleString('en-US');
+        JS,
+                                    ])
                             ])
-                            ->columns(4)
+                            ->columns(2)
                             ->defaultItems(1)
                             ->addActionLabel('افزودن آیتم')
                             ->reorderable()

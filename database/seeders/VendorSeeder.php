@@ -26,6 +26,8 @@ class VendorSeeder extends Seeder
             'میوه فروشی جنب پاک',
             'میوه فروشی شهرک پرواز',
             'میوه فروشی فرشته',
+            'مرکز خرید اطلس',
+            'خیاط لاله پارک',
         ];
 
         $organizations = Organization::all();
