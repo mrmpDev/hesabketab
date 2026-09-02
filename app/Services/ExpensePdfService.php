@@ -4,49 +4,60 @@ namespace App\Services;
 
 use App\Models\Expense;
 use App\Models\Organization;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Barryvdh\DomPDF\PDF as PdfDocument;
 use Illuminate\Support\Carbon;
+use Mpdf\Mpdf;
 
 class ExpensePdfService
 {
-    public function receipt(Expense $expense): PdfDocument
+    protected function makeMpdf(): Mpdf
+    {
+        return new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'default_font' => 'vazirmatn',
+            'directionality' => 'rtl',
+            'fontDir' => [public_path('fonts/pdf')],
+            'fontdata' => [
+                'vazirmatn' => [
+                    'R' => 'Vazirmatn-Regular.ttf',
+                    'B' => 'Vazirmatn-Bold.ttf',
+                ],
+            ],
+        ]);
+    }
+
+    public function receipt(Expense $expense): Mpdf
     {
         $expense->loadMissing(['organization', 'category', 'buyer', 'vendor', 'bankCard', 'items', 'attachments']);
 
-        return Pdf::loadView('pdf.expense-receipt', ['expense' => $expense])
-            ->setPaper('a4', 'portrait');
+        $mpdf = $this->makeMpdf();
+        $mpdf->WriteHTML(view('pdf.expense-receipt', ['expense' => $expense])->render());
+
+        return $mpdf;
     }
 
-    /**
-     * @param  array<int, int>|null  $accessibleOrganizationIds  Null means unrestricted (admin).
-     */
-    public function report(
-        ?int $organizationId,
-        ?Carbon $from,
-        ?Carbon $to,
-        ?array $accessibleOrganizationIds = null
-    ): PdfDocument {
+    public function report(?int $organizationId, ?Carbon $from, ?Carbon $to, ?array $accessibleOrganizationIds = null): Mpdf
+    {
         $expenses = Expense::query()
             ->with(['organization', 'category', 'buyer', 'vendor'])
-            ->when($organizationId, fn ($query) => $query->where('organization_id', $organizationId))
-            ->when(
-                $accessibleOrganizationIds !== null,
-                fn ($query) => $query->whereIn('organization_id', $accessibleOrganizationIds)
-            )
-            ->when($from, fn ($query) => $query->whereDate('expense_date', '>=', $from))
-            ->when($to, fn ($query) => $query->whereDate('expense_date', '<=', $to))
+            ->when($organizationId, fn ($q) => $q->where('organization_id', $organizationId))
+            ->when($accessibleOrganizationIds !== null, fn ($q) => $q->whereIn('organization_id', $accessibleOrganizationIds))
+            ->when($from, fn ($q) => $q->whereDate('expense_date', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('expense_date', '<=', $to))
             ->orderBy('expense_date')
             ->get();
 
         $organization = $organizationId ? Organization::find($organizationId) : null;
 
-        return Pdf::loadView('pdf.expenses-report', [
+        $mpdf = $this->makeMpdf();
+        $mpdf->WriteHTML(view('pdf.expenses-report', [
             'expenses' => $expenses,
             'organization' => $organization,
             'from' => $from,
             'to' => $to,
             'total' => $expenses->sum('total_amount'),
-        ])->setPaper('a4', 'portrait');
+        ])->render());
+
+        return $mpdf;
     }
 }

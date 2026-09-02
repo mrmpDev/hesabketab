@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Abdal\PhpianRender\PhpianRender;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Reshapes Persian text so dompdf renders joined letters correctly
+        // (dompdf does not perform Arabic/Persian glyph shaping on its own).
+        // Usage in blade: @fa($expense->vendor?->name)
+        Blade::directive('fa', function ($expression) {
+            return "<?php echo e(\\Abdal\\PhpianRender\\PhpianRender::reshapeStatic((string) ($expression))); ?>";
+        });
     }
 }

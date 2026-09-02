@@ -13,7 +13,12 @@ class ExpensePdfController extends Controller
     {
         abort_unless(request()->user()?->can('view', $expense), 403);
 
-        return $service->receipt($expense)->stream("receipt-{$expense->id}.pdf");
+        $mpdf = $service->receipt($expense);
+
+        return response($mpdf->Output("receipt-{$expense->id}.pdf", \Mpdf\Output\Destination::STRING_RETURN), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"receipt-{$expense->id}.pdf\"",
+        ]);
     }
 
     public function report(Request $request, ExpensePdfService $service)
@@ -33,7 +38,11 @@ class ExpensePdfController extends Controller
         $from = $request->filled('from') ? Carbon::parse($request->string('from')->toString())->startOfDay() : null;
         $to = $request->filled('to') ? Carbon::parse($request->string('to')->toString())->endOfDay() : null;
 
-        return $service->report($organizationId, $from, $to, $accessibleOrgIds)
-            ->stream('expenses-report.pdf');
+        $mpdf = $service->report($organizationId, $from, $to, $accessibleOrgIds);
+
+        return response($mpdf->Output('expenses-report.pdf', \Mpdf\Output\Destination::STRING_RETURN), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="expenses-report.pdf"',
+        ]);
     }
 }
