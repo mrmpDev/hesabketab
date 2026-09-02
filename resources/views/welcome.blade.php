@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>حساب کتاب - سیستم مدیریت مالی و حسابداری</title>
 
-    <!-- فونت وزیرمتن برای خوانایی بهتر متن‌های فارسی -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=vazirmatn:400,500,600,700&display=swap" rel="stylesheet" />
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -62,7 +58,9 @@
             @auth
                 <a href="{{ url('/admin') }}" class="px-8 py-3.5 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-xl shadow-lg shadow-pink-600/20 transition">ورود به پنل کاربری</a>
             @else
-                <a href="{{ route('login') }}" class="px-8 py-3.5 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-xl shadow-lg shadow-pink-600/20 transition">شروع کنید</a>
+                @if (Route::has('login'))
+                    <a href="{{ route('login') }}" class="px-8 py-3.5 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-xl shadow-lg shadow-pink-600/20 transition">شروع کنید</a>
+                @endif
                 @if (Route::has('register'))
                     <a href="{{ route('register') }}" class="px-8 py-3.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium rounded-xl border border-slate-300 dark:border-slate-700 transition">ایجاد حساب کاربری</a>
                 @endif
