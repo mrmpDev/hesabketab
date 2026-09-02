@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Expenses\Tables;
 
+use App\Models\Expense;
 use App\Traits\HasJalaliDate;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -131,6 +133,13 @@ class ExpensesTable
                     }),
             ])
             ->recordActions([
+                Action::make('printReceipt')
+                    ->label('چاپ رسید')
+                    ->icon('heroicon-o-printer')
+                    ->color('gray')
+                    ->url(fn (Expense $record) => route('expenses.receipt.pdf', $record))
+                    ->openUrlInNewTab(),
+
                 EditAction::make()
                     ->label('ویرایش'),
             ])
