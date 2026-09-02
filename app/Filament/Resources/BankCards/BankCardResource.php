@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BankCards;
 
+use App\Filament\Concerns\ScopedToUserOrganizations;
 use App\Filament\Resources\BankCards\Pages\CreateBankCard;
 use App\Filament\Resources\BankCards\Pages\EditBankCard;
 use App\Filament\Resources\BankCards\Pages\ListBankCards;
@@ -14,6 +15,8 @@ use Filament\Tables\Table;
 
 class BankCardResource extends Resource
 {
+    use ScopedToUserOrganizations;
+
     protected static ?string $model = BankCard::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';

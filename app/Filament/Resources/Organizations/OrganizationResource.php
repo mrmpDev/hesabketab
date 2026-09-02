@@ -1,4 +1,6 @@
-<?php namespace App\Filament\Resources\Organizations;
+<?php
+
+namespace App\Filament\Resources\Organizations;
 
 use App\Filament\Resources\Organizations\Pages\CreateOrganization;
 use App\Filament\Resources\Organizations\Pages\EditOrganization;
@@ -9,16 +11,41 @@ use App\Models\Organization;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrganizationResource extends Resource
 {
     protected static ?string $model = Organization::class;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
+
     protected static ?string $navigationLabel = 'مجموعه یا سازمان';
+
     protected static ?string $modelLabel = 'مطب';
+
     protected static ?string $pluralModelLabel = 'مجموعه یا سازمان';
+
     protected static string|\UnitEnum|null $navigationGroup = 'مجموعه‌ها';
+
     protected static ?int $navigationSort = 1;
+
+    /**
+     * Organizations don't have an organization_id column (they *are* the
+     * organization), so this can't use the generic scoping trait — the
+     * lookup key here is the record's own id.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = auth()->user();
+
+        if ($user && ! $user->isAdmin()) {
+            $query->whereIn('id', $user->accessibleOrganizationIds());
+        }
+
+        return $query;
+    }
 
     public static function form(Schema $schema): Schema
     {

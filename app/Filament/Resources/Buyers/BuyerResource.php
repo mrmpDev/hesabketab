@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Buyers;
 
+use App\Filament\Concerns\ScopedToUserOrganizations;
 use App\Filament\Resources\Buyers\Pages\CreateBuyer;
 use App\Filament\Resources\Buyers\Pages\EditBuyer;
 use App\Filament\Resources\Buyers\Pages\ListBuyers;
@@ -14,6 +15,8 @@ use Filament\Tables\Table;
 
 class BuyerResource extends Resource
 {
+    use ScopedToUserOrganizations;
+
     protected static ?string $model = Buyer::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';

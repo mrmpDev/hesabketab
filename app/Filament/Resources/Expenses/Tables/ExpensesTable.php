@@ -2,16 +2,15 @@
 
 namespace App\Filament\Resources\Expenses\Tables;
 
-use App\Models\Expense;
 use App\Traits\HasJalaliDate;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Table;
 use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class ExpensesTable
@@ -66,6 +65,13 @@ class ExpensesTable
                     ->numeric()
                     ->suffix(' ریال')
                     ->sortable(),
+
+                TextColumn::make('attachments_count')
+                    ->label('ضمیمه‌ها')
+                    ->counts('attachments')
+                    ->badge()
+                    ->color(fn ($state) => $state > 0 ? 'success' : 'gray')
+                    ->formatStateUsing(fn ($state) => $state > 0 ? $state : '-'),
 
                 TextColumn::make('creator.name')
                     ->label('ثبت‌کننده')

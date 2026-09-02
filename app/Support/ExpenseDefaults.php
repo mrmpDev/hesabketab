@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\BankCard;
 use App\Models\Buyer;
 use App\Models\Organization;
+use App\Models\User;
 use App\Models\UserPreference;
 
 /**
@@ -22,6 +23,9 @@ class ExpenseDefaults
     public static function organizationId(?int $userId = null): ?int
     {
         $userId ??= auth()->id();
+        $user = $userId ? User::find($userId) : null;
+        $isAdmin = $user?->isAdmin() ?? true;
+        $accessibleIds = $user && ! $isAdmin ? $user->accessibleOrganizationIds() : null;
 
         if ($userId) {
             $preferredOrganizationId = UserPreference::query()
@@ -31,6 +35,7 @@ class ExpenseDefaults
 
             if (
                 $preferredOrganizationId
+                && (! $accessibleIds || in_array($preferredOrganizationId, $accessibleIds, true))
                 && Organization::query()
                     ->whereKey($preferredOrganizationId)
                     ->where('is_active', true)
@@ -42,6 +47,7 @@ class ExpenseDefaults
 
         return Organization::query()
             ->where('is_active', true)
+            ->when($accessibleIds !== null, fn ($query) => $query->whereIn('id', $accessibleIds))
             ->orderBy('name')
             ->value('id');
     }

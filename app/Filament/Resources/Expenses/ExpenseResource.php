@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Expenses;
 
+use App\Filament\Concerns\ScopedToUserOrganizations;
 use App\Filament\Resources\Expenses\Pages\CreateExpense;
 use App\Filament\Resources\Expenses\Pages\EditExpense;
 use App\Filament\Resources\Expenses\Pages\ListExpenses;
@@ -14,6 +15,8 @@ use Filament\Tables\Table;
 
 class ExpenseResource extends Resource
 {
+    use ScopedToUserOrganizations;
+
     protected static ?string $model = Expense::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-receipt-percent';

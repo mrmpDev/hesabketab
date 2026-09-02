@@ -2,12 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\BankCard;
-use App\Models\Buyer;
-use App\Models\ExpenseCategory;
-use App\Models\Organization;
-use App\Models\User;
-use App\Models\Vendor;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -23,6 +17,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             UserSeeder::class,
+            RoleSeeder::class,
             ExpenseCategorySeeder::class,
             OrganizationSeeder::class,
             BuyerSeeder::class,

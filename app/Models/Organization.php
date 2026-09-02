@@ -1,15 +1,19 @@
-<?php namespace App\Models;
+<?php
+
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Organization extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'code', 'is_active', 'description',];
-    protected $casts = ['is_active' => 'boolean',];
+    protected $fillable = ['name', 'code', 'is_active', 'description'];
+
+    protected $casts = ['is_active' => 'boolean'];
 
     public function buyers(): HasMany
     {
@@ -44,5 +48,14 @@ class Organization extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Non-admin users (accountant/staff) who are explicitly allowed to
+     * work within this organization.
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class);
     }
 }

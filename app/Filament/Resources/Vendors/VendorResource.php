@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vendors;
 
+use App\Filament\Concerns\ScopedToUserOrganizations;
 use App\Filament\Resources\Vendors\Pages\CreateVendor;
 use App\Filament\Resources\Vendors\Pages\EditVendor;
 use App\Filament\Resources\Vendors\Pages\ListVendors;
@@ -14,6 +15,8 @@ use Filament\Tables\Table;
 
 class VendorResource extends Resource
 {
+    use ScopedToUserOrganizations;
+
     protected static ?string $model = Vendor::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-storefront';

@@ -9,12 +9,14 @@ use App\Models\Organization;
 use App\Models\Vendor;
 use App\Support\ExpenseDefaults;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class ExpenseForm
 {
@@ -37,19 +39,25 @@ class ExpenseForm
                     ->schema([
                         Select::make('organization_id')
                             ->label('مطب / مجموعه')
-                            ->options(
-                                Organization::query()
+                            ->options(function () {
+                                $user = auth()->user();
+
+                                return Organization::query()
                                     ->where('is_active', true)
+                                    ->when(
+                                        $user && ! $user->isAdmin(),
+                                        fn ($query) => $query->whereIn('id', $user->accessibleOrganizationIds())
+                                    )
                                     ->orderBy('name')
-                                    ->pluck('name', 'id')
-                            )
+                                    ->pluck('name', 'id');
+                            })
                             ->searchable()
                             ->preload()
                             ->required()
                             ->live()
-                            ->default(fn() => ExpenseDefaults::organizationId())
+                            ->default(fn () => ExpenseDefaults::organizationId())
                             ->afterStateUpdated(function ($state, $set, $get) {
-                                if (!$state) {
+                                if (! $state) {
                                     $set('buyer_id', null);
                                     $set('vendor_id', null);
                                     $set('bank_card_id', null);
@@ -97,7 +105,7 @@ class ExpenseForm
                             ->options(function ($get) {
                                 $organizationId = $get('organization_id');
 
-                                if (!$organizationId) {
+                                if (! $organizationId) {
                                     return [];
                                 }
 
@@ -106,7 +114,7 @@ class ExpenseForm
                                     ->orderBy('first_name')
                                     ->orderBy('last_name')
                                     ->get()
-                                    ->mapWithKeys(fn(Buyer $buyer) => [
+                                    ->mapWithKeys(fn (Buyer $buyer) => [
                                         $buyer->id => $buyer->full_name,
                                     ])
                                     ->all();
@@ -114,14 +122,14 @@ class ExpenseForm
                             ->searchable()
                             ->preload()
                             ->live()
-                            ->default(fn($get) => ExpenseDefaults::buyerId($get('organization_id'))),
+                            ->default(fn ($get) => ExpenseDefaults::buyerId($get('organization_id'))),
 
                         Select::make('vendor_id')
                             ->label('فروشگاه / دریافت‌کننده')
                             ->options(function ($get) {
                                 $organizationId = $get('organization_id');
 
-                                if (!$organizationId) {
+                                if (! $organizationId) {
                                     return [];
                                 }
 
@@ -157,7 +165,7 @@ class ExpenseForm
                             ->options(function ($get) {
                                 $organizationId = $get('organization_id');
 
-                                if (!$organizationId) {
+                                if (! $organizationId) {
                                     return [];
                                 }
 
@@ -166,7 +174,7 @@ class ExpenseForm
                                     ->orderBy('bank_name')
                                     ->orderBy('holder_name')
                                     ->get()
-                                    ->mapWithKeys(fn(BankCard $card) => [
+                                    ->mapWithKeys(fn (BankCard $card) => [
                                         $card->id => $card->display_name,
                                     ])
                                     ->all();
@@ -174,24 +182,24 @@ class ExpenseForm
                             ->searchable()
                             ->preload()
                             ->default(function ($get) {
-                                if (!in_array($get('payment_method'), ['pos', 'transfer'], true)) {
+                                if (! in_array($get('payment_method'), ['pos', 'transfer'], true)) {
                                     return null;
                                 }
 
                                 return ExpenseDefaults::bankCardId($get('organization_id'));
                             })
-                            ->visible(fn($get) => in_array($get('payment_method'), ['pos', 'transfer']))
-                            ->required(fn($get) => in_array($get('payment_method'), ['pos', 'transfer'])),
+                            ->visible(fn ($get) => in_array($get('payment_method'), ['pos', 'transfer']))
+                            ->required(fn ($get) => in_array($get('payment_method'), ['pos', 'transfer'])),
 
-//                        TextInput::make('total_amount')
-//                            ->columnSpanFull()
-//                            ->label('مبلغ کل')
-//                            ->numeric()
-//                            ->integer()
-//                            ->minValue(0)
-//                            ->suffix('ریال')
-//                            ->required()
-//                            ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
+                        //                        TextInput::make('total_amount')
+                        //                            ->columnSpanFull()
+                        //                            ->label('مبلغ کل')
+                        //                            ->numeric()
+                        //                            ->integer()
+                        //                            ->minValue(0)
+                        //                            ->suffix('ریال')
+                        //                            ->required()
+                        //                            ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
 
                         TextInput::make('total_amount')
                             ->columnSpanFull()
@@ -200,7 +208,7 @@ class ExpenseForm
                             ->minValue(0)
                             ->suffix('ریال')
                             ->required()
-                            ->dehydrateStateUsing(fn($state) => (int)str_replace(',', '', $state))
+                            ->dehydrateStateUsing(fn ($state) => (int) str_replace(',', '', $state))
                             ->extraInputAttributes([
                                 'dir' => 'ltr',
                                 'style' => 'direction: ltr; text-align: left;',
@@ -216,7 +224,6 @@ class ExpenseForm
             $el.value = Number(value).toLocaleString('en-US');
         JS,
                             ]),
-
 
                         Textarea::make('notes')
                             ->label('توضیحات')
@@ -248,21 +255,21 @@ class ExpenseForm
                                     ->label('واحد')
                                     ->placeholder('عدد، بسته، کیلو، خدمت و ...'),
 
-//                                TextInput::make('amount')
-//                                    ->label('مبلغ آیتم')
-//                                    ->numeric()
-//                                    ->integer()
-//                                    ->minValue(0)
-//                                    ->suffix('ریال')
-//                                    ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
-//                            ])
+                                //                                TextInput::make('amount')
+                                //                                    ->label('مبلغ آیتم')
+                                //                                    ->numeric()
+                                //                                    ->integer()
+                                //                                    ->minValue(0)
+                                //                                    ->suffix('ریال')
+                                //                                    ->extraInputAttributes(self::LTR_NUMERIC_INPUT_ATTRIBUTES),
+                                //                            ])
 
                                 TextInput::make('amount')
                                     ->label('مبلغ آیتم')
                                     ->inputMode('numeric')
                                     ->minValue(0)
                                     ->suffix('ریال')
-                                    ->dehydrateStateUsing(fn($state) => (int)str_replace(',', '', $state))
+                                    ->dehydrateStateUsing(fn ($state) => (int) str_replace(',', '', $state))
                                     ->extraInputAttributes([
                                         'dir' => 'ltr',
                                         'style' => 'direction: ltr; text-align: left;',
@@ -277,7 +284,7 @@ class ExpenseForm
 
             $el.value = Number(value).toLocaleString('en-US');
         JS,
-                                    ])
+                                    ]),
                             ])
                             ->columns(2)
                             ->defaultItems(1)
@@ -287,6 +294,40 @@ class ExpenseForm
                             ->itemNumbers()
                             ->columnSpanFull(),
                     ]),
+
+                Section::make('ضمیمه‌ها')
+                    ->description('اختیاری — فیش، فاکتور یا رسید خرید را می‌توانید ضمیمه کنید.')
+                    ->schema([
+                        Repeater::make('attachments')
+                            ->label('فایل‌های ضمیمه')
+                            ->relationship()
+                            ->schema([
+                                FileUpload::make('file_path')
+                                    ->label('فایل')
+                                    ->disk('public')
+                                    ->directory('expense-attachments')
+                                    ->visibility('public')
+                                    ->acceptedFileTypes(['image/*', 'application/pdf'])
+                                    ->maxSize(5120)
+                                    ->downloadable()
+                                    ->openable()
+                                    ->required()
+                                    ->columnSpanFull(),
+                            ])
+                            ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
+                                if (! empty($data['file_path'])) {
+                                    $data['file_name'] = basename($data['file_path']);
+                                    $data['mime_type'] = Storage::disk('public')->mimeType($data['file_path']);
+                                }
+
+                                return $data;
+                            })
+                            ->addActionLabel('افزودن ضمیمه')
+                            ->defaultItems(0)
+                            ->collapsible()
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsed(fn ($record) => blank($record?->attachments)),
             ]);
     }
 }
