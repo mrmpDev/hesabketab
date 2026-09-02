@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use Abdal\PhpianRender\PhpianRender;
+use App\Models\User;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
