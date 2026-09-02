@@ -1,0 +1,77 @@
+diff --git a/app/Filament/Resources/Expenses/Schemas/ExpenseForm.php b/app/Filament/Resources/Expenses/Schemas/ExpenseForm.php
+index d92a368..62322e7 100644
+--- a/app/Filament/Resources/Expenses/Schemas/ExpenseForm.php
++++ b/app/Filament/Resources/Expenses/Schemas/ExpenseForm.php
+@@ -9,12 +9,14 @@
+ use App\Models\Vendor;
+ use App\Support\ExpenseDefaults;
+ use Filament\Forms\Components\DatePicker;
++use Filament\Forms\Components\FileUpload;
+ use Filament\Forms\Components\Repeater;
+ use Filament\Forms\Components\Select;
+ use Filament\Forms\Components\Textarea;
+ use Filament\Forms\Components\TextInput;
+ use Filament\Schemas\Components\Section;
+ use Filament\Schemas\Schema;
++use Illuminate\Support\Facades\Storage;
+ 
+ class ExpenseForm
+ {
+@@ -287,6 +289,40 @@ public static function configure(Schema $schema): Schema
+                             ->columnSpanFull(),
+                     ]),
++
++                Section::make('ضمیمه‌ها')
++                    ->description('اختیاری — فیش، فاکتور یا رسید خرید را می‌توانید ضمیمه کنید.')
++                    ->schema([
++                        Repeater::make('attachments')
++                            ->label('فایل‌های ضمیمه')
++                            ->relationship()
++                            ->schema([
++                                FileUpload::make('file_path')
++                                    ->label('فایل')
++                                    ->disk('public')
++                                    ->directory('expense-attachments')
++                                    ->visibility('public')
++                                    ->acceptedFileTypes(['image/*', 'application/pdf'])
++                                    ->maxSize(5120)
++                                    ->downloadable()
++                                    ->openable()
++                                    ->required()
++                                    ->columnSpanFull(),
++                            ])
++                            ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
++                                if (!empty($data['file_path'])) {
++                                    $data['file_name'] = basename($data['file_path']);
++                                    $data['mime_type'] = Storage::disk('public')->mimeType($data['file_path']);
++                                }
++
++                                return $data;
++                            })
++                            ->addActionLabel('افزودن ضمیمه')
++                            ->defaultItems(0)
++                            ->collapsible()
++                            ->columnSpanFull(),
++                    ])
++                    ->collapsed(fn($record) => blank($record?->attachments)),
+             ]);
+     }
+ }
+diff --git a/app/Filament/Resources/Expenses/Tables/ExpensesTable.php b/app/Filament/Resources/Expenses/Tables/ExpensesTable.php
+index 1a2b3c4..5d6e7f8 100644
+--- a/app/Filament/Resources/Expenses/Tables/ExpensesTable.php
++++ b/app/Filament/Resources/Expenses/Tables/ExpensesTable.php
+@@ -60,6 +60,12 @@ public static function configure(Table $table): Table
+                     ->numeric()
+                     ->suffix(' ریال')
+                     ->sortable(),
++
++                TextColumn::make('attachments_count')
++                    ->label('ضمیمه‌ها')
++                    ->counts('attachments')
++                    ->badge()
++                    ->color(fn ($state) => $state > 0 ? 'success' : 'gray')
++                    ->formatStateUsing(fn ($state) => $state > 0 ? $state : '-'),
+ 
+                 TextColumn::make('creator.name')
+                     ->label('ثبت‌کننده')
