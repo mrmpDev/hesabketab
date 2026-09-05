@@ -148,8 +148,10 @@
 
             <ul class="attachments-list">
                 @foreach ($expense->attachments as $attachment)
+                    <img src="{{ Storage::url("expense-attachments/$attachment->file_name") }}" style="width: 250px; height: 350px;" alt="Attachment">
                     <li>
-                        @fa($attachment->file_name)
+
+{{--                        @fa($attachment->file_name)--}}
                     </li>
                 @endforeach
             </ul>

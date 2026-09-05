@@ -49,6 +49,7 @@
             مدیریت مالی سازمان شما با <span class="text-pink-600 dark:text-pink-400">حساب کتاب</span>
         </h1>
 
+
         <p class="text-lg text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
             سیستم جامع حسابداری و مدیریت مالی «حساب کتاب»، ابزاری دقیق و مطمئن برای ثبت تراکنش‌ها، پیگیری هزینه‌ها و کنترل کامل وضعیت مالی کسب‌وکار شما.
         </p>

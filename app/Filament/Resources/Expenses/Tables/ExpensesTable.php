@@ -39,16 +39,19 @@ class ExpensesTable
                 TextColumn::make('category.name')
                     ->label('دسته‌بندی')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('buyer.full_name')
                     ->label('خریدار')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('vendor.name')
                     ->label('فروشگاه / دریافت‌کننده')
                     ->searchable()
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('payment_method')
                     ->label('روش پرداخت')
@@ -58,9 +61,10 @@ class ExpensesTable
                             'pos' => 'پوز',
                             'transfer' => 'کارت‌به‌کارت',
                             'cash' => 'نقدی',
-                            default => 'نامشخص',
+                            default => 'نامشخص'
                         }
-                    ),
+                    )
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('total_amount')
                     ->label('مبلغ کل')
