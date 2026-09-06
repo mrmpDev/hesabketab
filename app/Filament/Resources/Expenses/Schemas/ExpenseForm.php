@@ -241,7 +241,6 @@ class ExpenseForm
                             ->schema([
                                 TextInput::make('title')
                                     ->label('کالا / خدمت')
-                                    ->required()
                                     ->maxLength(255),
 
                                 TextInput::make('quantity')
