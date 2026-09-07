@@ -47,7 +47,7 @@
                 @fa($expense->buyer?->full_name ?? '-')
             </td>
 
-            <td class="info-labell">@fa('فروشگاه / دریافت‌کننده')</td>
+            <td class="info-label">@fa('فروشگاه / دریافت‌کننده')</td>
             <td class="info-value">
                 @fa($expense->vendor?->name ?? '-')
             </td>
@@ -126,7 +126,7 @@
     </table>
 
     @if ($expense->notes)
-        <div class="content-box">
+        <div class="content-box" style="margin-bottom: 0;">
             <div class="box-title">
                 @fa('توضیحات')
             </div>
@@ -138,25 +138,68 @@
     @endif
 
     @if ($expense->attachments->isNotEmpty())
+        <style>
+            .attachments-box {
+                margin-top: 15px;
+                page-break-before: avoid;
+                page-break-inside: avoid;
+            }
+
+            .attachment-table {
+                width: 100%;
+                table-layout: fixed;
+                border-collapse: collapse;
+            }
+
+            .attachment-td {
+                width: 33.333%;
+                padding: 6px;
+                vertical-align: top;
+            }
+
+            .attachment-card {
+                background-color: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 6px;
+                box-sizing: border-box;
+            }
+
+            /* اعمال ابعاد ثابت و یکسان برای تمامی تصاویر */
+            .attachment-card img {
+                width: 100% !important;
+                height: 160px !important; /* ارتفاع کاملاً ثابت و یکدست برای همه عکس‌ها */
+                object-fit: cover !important; /* برش هوشمند تصویر برای جلوگیری از کشیدگی و دفرمه شدن */
+                border-radius: 4px;
+                display: block;
+            }
+        </style>
+
         <div class="content-box attachments-box">
             <div class="box-title">
                 @fa('ضمیمه‌ها')
-                <span class="attachment-count">
+                <span class="attachment-count" style="font-size: 0.9em; color: #64748b;">
                     ({{ $expense->attachments->count() }})
                 </span>
             </div>
 
-            <ul class="attachments-list">
-                @foreach ($expense->attachments as $attachment)
-                    <li>
-                        <img src="{{ Storage::url("expense-attachments/$attachment->file_name") }}"  style="width: 280px; height: 350px;"  alt="Attachment">
-                    </li>
+            <table class="attachment-table" dir="rtl">
+                @foreach ($expense->attachments->chunk(3) as $chunk)
+                    <tr>
+                        @foreach ($chunk as $attachment)
+                            <td class="attachment-td">
+                                <div class="attachment-card">
+                                    <img  style="width: 280px; height: 370px; border: 2px solid #c9a227;" src="{{ Storage::url("expense-attachments/$attachment->file_name") }}" alt="ضمیمه سند">
+                                </div>
+                            </td>
+                        @endforeach
+
+                        @for ($i = $chunk->count(); $i < 3; $i++)
+                            <td class="attachment-td"></td>
+                        @endfor
+                    </tr>
                 @endforeach
-            </ul>
-
-
-
-
+            </table>
         </div>
     @endif
 @endsection
