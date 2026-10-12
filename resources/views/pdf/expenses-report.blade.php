@@ -17,7 +17,7 @@
 
             <div class="document-meta">
                 <span class="separator">@fa('هزینه های مربوط به:')</span>
-                <span style="color:deeppink;">@fa($organization?->name ?? 'همه‌ی مجموعه‌ها')</span>
+                <span style="color:#1a3c50;">@fa($organization?->name ?? 'همه‌ی مجموعه‌ها')</span>
                 <span class="separator">|</span>
                 @fa('از '.($from ? Jalalian::fromDateTime($from)->format('Y/m/d') : 'ابتدا'))
                 <span class="separator">|</span>
