@@ -16,7 +16,8 @@
             <h1>@fa('گزارش هزینه‌ها')</h1>
 
             <div class="document-meta">
-                @fa($organization?->name ?? 'همه‌ی مجموعه‌ها')
+                <span class="separator">@fa('هزینه های مربوط به:')</span>
+                <span style="color:deeppink;">@fa($organization?->name ?? 'همه‌ی مجموعه‌ها')</span>
                 <span class="separator">|</span>
                 @fa('از '.($from ? Jalalian::fromDateTime($from)->format('Y/m/d') : 'ابتدا'))
                 <span class="separator">|</span>
@@ -55,7 +56,8 @@
 
             <th>@fa('دسته‌بندی')</th>
             <th>@fa('خریدار')</th>
-            <th>@fa('فروشنده')</th>
+            <th>@fa('شرح')</th>
+            <th>@fa('دریافت کننده')</th>
             <th style="width: 75px;">@fa('پرداخت')</th>
             <th style="width: 120px;">@fa('مبلغ (ریال)')</th>
         </tr>
@@ -67,7 +69,6 @@
                 <td class="text-center">
                     {{ Jalalian::fromDateTime($expense->expense_date)->format('Y/m/d') }}
                 </td>
-
                 @if (! $organization)
                     <td>
                         @fa($expense->organization?->name ?? '-')
@@ -80,6 +81,10 @@
 
                 <td>
                     @fa($expense->buyer?->full_name ?? '-')
+                </td>
+
+                <td>
+                    @fa($expense->notes ?? '-')
                 </td>
 
                 <td>
